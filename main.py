@@ -13,11 +13,11 @@ model = tf.keras.Sequential([
 model.compile(optimizer='sgd', loss='mean_squared_error')
 
 # Генерируем обучающие данные
-X_train = np.array([[i] for i in range(1, 11)])
-y_train = np.array([[i] for i in range(1, 11)])
+X_train = np.array([[i / 100] for i in range(1, 1001)])
+y_train = np.array([[i / 100] for i in range(1, 1001)])
 
 # Обучаем нейронную сеть
-model.fit(X_train, y_train, epochs=1000)
+model.fit(X_train, y_train, epochs=200)
 
 # Глобальные переменные для хранения чисел и операции
 num1 = None
@@ -34,11 +34,10 @@ def handle_start(message):
 def handle_math_exercise(message):
     global num1, num2, operation
     # Генерация математического упражнения
-    num1 = random.randint(1, 10)  # Используем числа от 1 до 10
-    num2 = random.randint(1, 10)  # Используем числа от 1 до 10
+    num1 = random.randint(1, 1000)
+    num2 = random.randint(1, 1000)
     operation = random.choice(['+', '-', '*'])
     question = f"Решите пример: {num1} {operation} {num2}"
-
     # Отправка упражнения пользователю
     bot.send_message(message.chat.id, question)
 
@@ -49,19 +48,15 @@ def handle_message(message):
     try:
         # Пробуем преобразовать ответ пользователя в число
         user_answer = float(message.text)
-
         # Проверяем ответ пользователя с помощью нейронной сети
         predicted_answer = model.predict(np.array([[user_answer]]))[0][0]
         correct_answer = eval(f"{num1} {operation} {num2}")
         difference = abs(predicted_answer - correct_answer)
-
         print("Предсказанный ответ:", predicted_answer)
         print("Правильный ответ:", correct_answer)
         print("Разница:", difference)
-
         # Установим порог для сравнения
         threshold = 0.15  # Увеличим порог для сравнения
-
         if difference < threshold:
             bot.send_message(message.chat.id, "Правильно!")
         else:
