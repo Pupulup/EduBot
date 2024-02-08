@@ -1,3 +1,5 @@
+from PIL import Image, ImageDraw, ImageFont
+import io
 import numpy as np
 import telebot
 import random
@@ -19,6 +21,17 @@ model.fit(X_train, y_train, epochs=3)
 
 user_difficulty = {}
 user_results = {}
+
+
+def generate_math_image(num1, num2, operation):
+    img = Image.new('RGB', (300, 100), color='white')
+    d = ImageDraw.Draw(img)
+    font = ImageFont.truetype("arial.ttf", 36)
+    d.text((20, 30), f"{num1} {operation} {num2} =", fill=(0, 0, 0), font=font)
+    buf = io.BytesIO()
+    img.save(buf, format='PNG')
+    buf.seek(0)
+    return buf
 
 
 @bot.message_handler(commands=['start'])
@@ -47,9 +60,10 @@ def handle_math_exercise(message):
 
     difficulty = user_difficulty[message.chat.id]
     num1, num2 = generate_numbers(difficulty)
-    operation = random.choice(['+', '-', '*'])
-    question = f"Решите пример: {num1} {operation} {num2}"
-    bot.send_message(message.chat.id, question)
+    operation = random.choice(['+'])
+
+    image_buffer = generate_math_image(num1, num2, operation)
+    bot.send_photo(message.chat.id, photo=image_buffer)
 
     bot.num1 = num1
     bot.num2 = num2
@@ -84,9 +98,9 @@ def handle_message(message):
             correct_answer = eval(f"{bot.num1} {bot.operation} {bot.num2}")
             difference = abs(predicted_answer - user_answer)
             print("Предсказанный ответ:", predicted_answer)
-            print("Правильный ответ:", correct_answer)
+            print("Данный ответ:", correct_answer)
             print("Разница:", difference)
-            threshold = 0.15
+            threshold = 0.2
             if difference < threshold:
                 bot.send_message(message.chat.id, "Правильно!")
                 if message.chat.id not in user_results:
